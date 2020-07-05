@@ -146,13 +146,24 @@ namespace DaggerfallWorkshop.Game.Banking
             }
         }
 
+        #region Modded Section
+
         public static int GetHousePrice(BuildingSummary house)
         {
             // Get model data and radius which defines price
             ModelData modelData;
             DaggerfallUnity.Instance.MeshReader.GetModelData(house.ModelID, out modelData);
-            float houseRadius = modelData.DFMesh.Radius;
-            return (int) (houseRadius * housePriceMult);
+            PlayerEntity player = GameManager.Instance.PlayerEntity;
+            float playerPers = ((player.Stats.LivePersonality - 50) * .001f) * -1;
+            float playerWill = ((player.Stats.LiveWillpower - 50) * .0005f) * -1; // 9% difference positive or negative total.
+            float playerLuck = ((player.Stats.LiveLuck - 50) * .0003f) * -1;
+            float mercantileValue = (player.Skills.GetLiveSkillValue(DFCareer.Skills.Mercantile) * .0012f) * -1;
+            float etiquetteValue = (player.Skills.GetLiveSkillValue(DFCareer.Skills.Etiquette) * .0002f) * -1; // 16% difference positive or negative total.
+            float streetwiseValue = (player.Skills.GetLiveSkillValue(DFCareer.Skills.Streetwise) * .0002f) * -1;
+            float playerPriceMod = playerPers + playerWill + playerLuck + mercantileValue + etiquetteValue + streetwiseValue + 1; // Overall Maximum increase or decrease is 25% for house price.
+            float houseRadius = modelData.DFMesh.Radius; // So first change I may as well make is having player stats and skills have some effect on the price of purchasing and selling property, not a huge effect, but something to simulate haggling or negotiation of some sort, possibly for boats as well. Thinking Personality, Luck, Mercantile, and maybe some Etiquete and Streetwise.
+
+            return (int)Mathf.Round((houseRadius * housePriceMult) * playerPriceMod);
         }
 
         public static int GetHouseSellPrice(BuildingSummary house) { return (int)(GetHousePrice(house) * deedSellMult); }
@@ -167,6 +178,8 @@ namespace DaggerfallWorkshop.Game.Banking
                 houses[i] = house;
             }
         }
+
+        #endregion
 
         #endregion
 
